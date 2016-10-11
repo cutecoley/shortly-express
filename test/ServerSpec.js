@@ -333,4 +333,15 @@ describe('', function() {
 
   }); // 'Account Login'
 
+  describe('Account Logout:', function() {
+
+    it('When logged out, should redirect to login page', function(done) {
+      request('http://127.0.0.1:4568/logout', function(err, res, body) {
+        console.log(res.headers);
+        expect(res.headers.location).to.equal('/login');
+      });
+    });
+  
+  });
+
 });

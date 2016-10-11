@@ -10,7 +10,7 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
-
+var passwordHash = require('password-hash');
 var app = express();
 
 app.set('views', __dirname + '/views');
@@ -98,7 +98,7 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
   User.where('username', req.body.username).fetch().then(function(user) {
     if (user) {
-      if (req.body.password === user.attributes.password) {
+      if (passwordHash.verify(req.body.password) === user.attributes.password) {
         res.status(200);
         res.cookie('loggedin', true);
         res.redirect('/');
@@ -122,7 +122,7 @@ app.post('/signup', function(req, res) {
     } else {
       Users.create({
         username: req.body.username,
-        password: req.body.password
+        password: passwordHash.generate(req.body.password)
       })
       .then(function() {
         res.cookie('loggedin', true);
