@@ -64,6 +64,14 @@ h1 {
   min-height: 50px;
 }
 
+#signout {
+  float: right;
+  /*clear: both;*/
+  margin-bottom: 5px;
+  padding: 5px;
+}
+
+
 .link:hover {
   background-color: #efe;
 }

@@ -2,7 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-
+var cookieParser = require('cookie-parser');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -21,6 +21,20 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+
+// Set up session and Cookie
+app.use(cookieParser());
+app.use(function(req, res, next) {
+  console.log('serving a ' + req.method + ' request on ' + req.url);
+  if (req.method === 'GET' && (req.url === '/' || req.url === '/create' || req.url === '/links')) {
+    if (req.cookies.loggedin === 'true') {
+      next();
+    } else {
+      res.redirect('/login');
+    }
+  }
+  next();
+});
 
 
 app.get('/', 
@@ -76,6 +90,52 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login', function(req, res) {
+  console.log('should re-render login page');
+  res.render('login');
+});
+
+app.post('/login', function(req, res) {
+  User.where('username', req.body.username).fetch().then(function(user) {
+    if (user) {
+      if (req.body.password === user.attributes.password) {
+        res.status(200);
+        res.cookie('loggedin', true);
+        res.redirect('/');
+      } else {
+        res.render('login');
+      }
+    } else {
+      res.redirect('/login');
+    }
+  });
+});
+
+app.get('/signup', function(req, res) {
+  res.render('signup');
+});
+
+app.post('/signup', function(req, res) {
+  new User({ username: req.body.username }).fetch().then(function(found) {
+    if (found) {
+      res.status(200).send(found.attributes);
+    } else {
+      Users.create({
+        username: req.body.username,
+        password: req.body.password
+      })
+      .then(function() {
+        res.cookie('loggedin', true);
+        res.redirect('/');
+      });
+    }
+  });
+});
+
+app.get('/logout', function(req, res) {
+  res.cookie('loggedin', false);
+  res.redirect('/login');
+});
 
 
 /************************************************************/
