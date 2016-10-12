@@ -77,15 +77,26 @@ app.use(express.static(__dirname + '/public'));
 app.use(cookieParser());
 app.use(function(req, res, next) {
   console.log('serving a ' + req.method + ' request on ' + req.url);
-  if (req.method === 'GET' && (req.url === '/' || req.url === '/create' || req.url === '/links')) {
-    if (req.cookies.loggedin === 'true') {
-      next();
-    } else {
-      res.redirect('/login');
-    }
+
+  // if (req.method === 'GET' && (req.url === '/' || req.url === '/create' || req.url === '/links')) {
+  //   if (req.cookies.loggedin === 'true') {
+  //     next();
+  //   } else {
+  //     res.redirect('/login');
+  //   }
+  // }
+  // next();
+
+  if (req.url === '/*', req.url === '/login' || req.url === '/signup' || req.session.user) {
+    next();
+  } else {
+    req.session.error = 'Access denied!';
+    res.redirect('/login');
   }
-  next();
 });
+
+var restrict = function(req, res, next) {
+};
 
 
 app.get('/', 
@@ -149,12 +160,10 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
   User.where('username', req.body.username).fetch().then(function(user) {
     if (user) {
-      console.log('find user password', user.attributes.password);
-      console.log('find req password', passwordHash.generate(req.body.password));
-      // if (req.body.password === user.attributes.password) {
       if (passwordHash.verify(req.body.password, user.attributes.password)) {
         res.status(200);
-        res.cookie('loggedin', true);
+        // res.cookie('loggedin', true);
+        res.session.user = user;
         res.redirect('/');
       } else {
         res.render('login');
@@ -180,8 +189,9 @@ app.post('/signup', function(req, res) {
           username: req.body.username,
           password: passwordHash.generate(req.body.password)
         })
-        .then(function() {
-          res.cookie('loggedin', true);
+        .then(function(newUser) {
+          // res.cookie('loggedin', true);
+          req.session.user = newUser;
           res.redirect('/');
         });
       }
@@ -192,8 +202,14 @@ app.post('/signup', function(req, res) {
 });
 
 app.get('/logout', function(req, res) {
-  res.cookie('loggedin', false);
-  res.redirect('/login');
+  // res.cookie('loggedin', false);
+  req.session.destroy(function(err) {
+    if (err) {
+      console.error(err);
+    } else {
+      res.redirect('/login');
+    }
+  });
 });
 
 /************************************************************/

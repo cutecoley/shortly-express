@@ -2,6 +2,11 @@ body {
   margin: 0;
   margin-top: 10px;
   font-family: arial, sans-serif;
+  background: url("background.jpg") no-repeat top left;
+  overflow: hidden;
+  background-size:cover;
+  clear:both;
+  padding:0px;
 }
 
 a {
@@ -142,4 +147,12 @@ form input[type=text], form input[type=password] {
 
 .creator .message {
   clear: both;
+}
+
+#my_logo{
+    background:  url('images.png');
+    width : 120px;
+    height : 120px;
+    background-size: cover;
+
 }
